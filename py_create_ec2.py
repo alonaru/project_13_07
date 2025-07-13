@@ -71,9 +71,13 @@ try:
 
     # Run terraform apply (auto approve)
     print("Running terraform apply...")
-    return_code, stdout, stderr = tf.apply(skip_plan=True)
-    if return_code != 0:
-        raise RuntimeError(f"Terraform apply failed:\n{stderr}")
+    ret_code, out, err = tf.apply()
+    print(out)  # Show terraform apply output
+    print(err)  # Show terraform apply errors
+
+    # Accept return codes 0 (no changes) or 2 (changes planned)
+    if ret_code not in [0, 2]:
+        raise RuntimeError(f"Terraform apply failed:\n{err}")
 
     print("Done! Resources should be deployed.")
     
