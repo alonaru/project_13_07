@@ -1,3 +1,9 @@
+# ignore python virtual enviroment
+project
+
+# ignore terraform files
+*terraform*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
