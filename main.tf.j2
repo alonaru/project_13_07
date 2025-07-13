@@ -63,3 +63,11 @@ resource "aws_lb_target_group_attachment" "web_instance_attachment" {
  target_group_arn = aws_lb_target_group.web_target_group.arn
  target_id        = aws_instance.web_server.id
 }
+
+output "instance_id" {
+  value = aws_instance.web_server.id
+}
+
+output "alb_dns_name" {
+  value = aws_lb.application_lb.dns_name
+}

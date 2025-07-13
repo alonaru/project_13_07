@@ -1,9 +1,12 @@
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from python_terraform import Terraform
 import os
+import boto3
+import json
 
-# Fixed AWS region
+# Fixed AWS region and availability zone
 region = "us-east-2"
+availability_zone = "us-east-2a"
 
 try:
     # Ask user for input
@@ -21,11 +24,6 @@ try:
         print("Invalid input. Defaulting to t3.small.")
         instance_type = "t3.small"
 
-    az = input("Enter availability zone (e.g., us-east-2a): ").strip()
-    if not az.startswith(region):
-        az = region + "a"
-        print("Invalid AZ. Defaulting to", az)
-
     lb_name = input("Enter Load Balancer name: ").strip()
     if not lb_name:
         raise ValueError("Load balancer name cannot be empty.")
@@ -34,7 +32,7 @@ try:
     variables = {
         "ami": ami,
         "instance_type": instance_type,
-        "availability_zone": az,
+        "availability_zone": availability_zone,
         "load_balancer_name": lb_name,
         "region": region
     }
@@ -54,20 +52,71 @@ try:
         f.write(rendered_tf)
     print("Terraform file created as main.tf")
 
-    # Run Terraform
+    # Initialize Terraform
     tf = Terraform()
     print("Running terraform init...")
     return_code, stdout, stderr = tf.init()
     if return_code != 0:
-        raise RuntimeError("Terraform init failed:\n" + stderr)
+        raise RuntimeError(f"Terraform init failed:\n{stderr}")
 
+    # Run terraform plan
+    print("Running terraform plan...")
+    ret_code, out, err = tf.plan()
+    print(out)  # Show terraform plan output
+    print(err)  # Show terraform plan errors
+
+    # Accept return codes 0 (no changes) or 2 (changes planned)
+    if ret_code not in [0, 2]:
+        raise RuntimeError(f"Terraform plan failed:\n{err}")
+
+    # Run terraform apply (auto approve)
     print("Running terraform apply...")
     return_code, stdout, stderr = tf.apply(skip_plan=True)
     if return_code != 0:
-        raise RuntimeError("Terraform apply failed:\n" + stderr)
+        raise RuntimeError(f"Terraform apply failed:\n{stderr}")
 
     print("Done! Resources should be deployed.")
     
+
+
+
+    # Get Terraform outputs
+    outputs = tf.output(json=True)[1]
+    instance_id = outputs['instance_id']['value']
+    alb_dns_name = outputs['alb_dns_name']['value']
+
+    # Create boto3 clients
+    ec2 = boto3.client('ec2', region_name=region)
+    elb = boto3.client('elbv2', region_name=region)
+
+    # Describe EC2 instance
+    response = ec2.describe_instances(InstanceIds=[instance_id])
+    instance = response['Reservations'][0]['Instances'][0]
+    instance_state = instance['State']['Name']
+    public_ip = instance.get('PublicIpAddress', 'N/A')
+
+    # Check ALB existence
+    lbs = elb.describe_load_balancers()['LoadBalancers']
+    alb_exists = any(lb['DNSName'] == alb_dns_name for lb in lbs)
+    if not alb_exists:
+        print(f"Warning: ALB with DNS {alb_dns_name} not found!")
+
+    # Save to JSON file
+    validation_data = {
+        "instance_id": instance_id,
+        "instance_state": instance_state,
+        "public_ip": public_ip,
+        "load_balancer_dns": alb_dns_name
+    }
+
+    with open("aws_validation.json", "w") as f:
+        json.dump(validation_data, f, indent=4)
+
+    print("Validation complete. Data saved to aws_validation.json")
+    print(validation_data)
+    # --- AWS Validation ends here ---
+
+
 except ValueError as ve:
     print("Input error:", ve)
 
