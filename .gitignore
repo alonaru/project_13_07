@@ -1,3 +1,7 @@
+# Ignore Main.tf template, repo need to include only jinja2 template
+main.tf
+project_13_07/main.tf
+
 # ignore python virtual enviroment
 project
 
