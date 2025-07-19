@@ -128,10 +128,6 @@ except ValueError as ve:
 except RuntimeError as re:
     print("Terraform error:", re)
 
-# except Exception as e:
-#     print("Unexpected error:", e)
-
-
 # ...existing code...
 except Exception as e:
     print("Unexpected error:", e)
