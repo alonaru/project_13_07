@@ -56,6 +56,10 @@ jinja2
    - Checks EC2 instance status and retrieves its public IP
    - Verifies that the ALB is live and fetches its DNS name
    - Saves output data to `aws_validation.json` in JSON format
+  
+4. **Ask User to destroy the resources**
+   - ask user to apply terraform destroy
+   - if not the script ended
 
 ---
 
