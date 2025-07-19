@@ -9,7 +9,7 @@ This project automates the creation and deployment of an EC2 instance and an App
 - `main.tf.j2` — Jinja2 template for your Terraform configuration  
 - `main.tf` — file created after running the python script Rendered Terraform file  
 - `aws_validation.json` — JSON file with instance ID, state, public IP, and ALB DNS  
-- `deploy.py` — Python script to generate `main.tf`, run Terraform commands, and validate resources  
+- `py_create_ec2.py` — Python script to generate `main.tf`, run Terraform commands, and validate resources  
 - `requirements.txt` — List of Python dependencies needed to run the script
 
 ---
