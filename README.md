@@ -162,5 +162,12 @@ terraform destroy
 - Double-check quotas and security group rules before deploying in production
 
 ---
+## ScreenShot of the final out put and the AWS Consule resources
+![Alt text](cli_output_and_json_file.png)
+![Alt text](resources_summery.png)
+![Alt text](browse_to_LB.png)
+
+
+
 
 Happy automating! 🎯
