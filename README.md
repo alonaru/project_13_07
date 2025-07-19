@@ -38,22 +38,24 @@ jinja2
 ## 🧠 What This Project Does
 
 1. **Prompts user for input:**
+   - Enter AWS region (e.g., `eu-west-1`)
+   - Automatically uses two availability zones (e.g., `eu-west-1a` and `eu-west-1b`)
    - Choose AMI type (`ubuntu` or `amazon_linux`)
    - Select instance type (`t3.small` or `t3.medium`)
    - Enter load balancer name
 
-2. **Generates Terraform file** based on a Jinja2 template
+2. **Generates a Terraform file** from a Jinja2 template, which:
+   - Creates a new VPC, two public subnets (in different AZs), and an Internet Gateway
+   - Sets up a route table for public internet access
+   - Provisions an EC2 instance (with a public IP) in one subnet
+   - Provisions an Application Load Balancer (ALB) across both subnets
+   - Creates a security group allowing HTTP traffic
+   - Attaches the EC2 instance to the ALB target group
 
-3. **Deploys resources to AWS**:
-   - EC2 instance in a specific subnet and availability zone
-   - ALB with listener and target group
-   - Security group allowing HTTP traffic
-   - Attaches EC2 instance to the target group
-
-4. **Validates AWS deployment using `boto3`**:
-   - Checks EC2 instance status and IP
-   - Verifies that the ALB is live
-   - Saves output data to `aws_validation.json`
+3. **Validates AWS deployment using `boto3`**:
+   - Checks EC2 instance status and retrieves its public IP
+   - Verifies that the ALB is live and fetches its DNS name
+   - Saves output data to `aws_validation.json` in JSON format
 
 ---
 
