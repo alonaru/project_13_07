@@ -5,7 +5,7 @@ provider "aws" {
 resource "aws_instance" "web_server" {
  ami = "{{ ami }}"
  instance_type = "{{ instance_type }}"
- subnet_id = "subnet-09a9b4fe4e74051b3"
+ subnet_id = aws_subnet.subnet1.id
  availability_zone = "{{ availability_zone }}"
 
  tags = {
@@ -18,13 +18,13 @@ resource "aws_lb" "application_lb" {
  internal = false
  load_balancer_type = "application"
  security_groups = [aws_security_group.lb_sg.id]
- subnets = ["subnet-05860172a9327d826", "subnet-09a9b4fe4e74051b3"]
+ subnets = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
 }
 
 resource "aws_security_group" "lb_sg" {
  name        = "alonaru-lb_security_group"
  description = "Allow HTTP inbound traffic"
- vpc_id   = "vpc-0a691b1cda1dea4be"
+ vpc_id   = aws_vpc.main_vpc.id
  
  ingress {
    from_port   = 80
@@ -56,12 +56,28 @@ resource "aws_lb_target_group" "web_target_group" {
  name     = "alonaru-web-target-group"
  port     = 80
  protocol = "HTTP"
- vpc_id   = "vpc-0a691b1cda1dea4be"
+ vpc_id   = aws_vpc.main_vpc.id
 }
 
 resource "aws_lb_target_group_attachment" "web_instance_attachment" {
  target_group_arn = aws_lb_target_group.web_target_group.arn
  target_id        = aws_instance.web_server.id
+}
+
+resource "aws_vpc" "main_vpc" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "subnet1" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "{{ az1 }}"
+}
+
+resource "aws_subnet" "subnet2" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "{{ az2 }}"
 }
 
 output "instance_id" {

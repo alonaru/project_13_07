@@ -1,23 +1,25 @@
+
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from python_terraform import Terraform
-import os
 import boto3
 import json
 
-# Fixed AWS region and availability zone
-region = "us-east-2"
-availability_zone = "us-east-2a"
-
 try:
+    # Ask user for region and AZs
+    region = input("Enter AWS region (e.g., eu-west-1): ").strip()
+    az1 = region + "a"
+    az2 = region + "b"
+
+
     # Ask user for input
     ami_choice = input("Choose AMI (ubuntu or amazon_linux): ").strip().lower()
     if ami_choice == "ubuntu":
-        ami = "ami-0c995fbcf99222492"  # Replace with actual Ubuntu AMI
+        ami = "ami-01f23391a59163da9"  # Replace with actual Ubuntu AMI
     elif ami_choice == "amazon_linux":
-        ami = "ami-0915e09cc7ceee3ab"  # Replace with actual Amazon Linux AMI
+        ami = "ami-0b3e7dd7b2a99b08d"  # Replace with actual Amazon Linux AMI
     else:
         print("Invalid AMI choice. Defaulting to Ubuntu.")
-        ami = "ami-0c995fbcf99222492"
+        ami = "ami-01f23391a59163da9"
 
     instance_type = input("Choose instance type (t3.small or t3.medium): ").strip()
     if instance_type not in ["t3.small", "t3.medium"]:
@@ -32,9 +34,10 @@ try:
     variables = {
         "ami": ami,
         "instance_type": instance_type,
-        "availability_zone": availability_zone,
-        "load_balancer_name": lb_name,
-        "region": region
+        "region": region,
+        "az1": az1,
+        "az2": az2,
+        "load_balancer_name": lb_name
     }
 
     # Load and render the template
@@ -69,15 +72,12 @@ try:
     if ret_code not in [0, 2]:
         raise RuntimeError(f"Terraform plan failed:\n{err}")
 
-    # Run terraform apply (auto approve)
+    # Run terraform apply (auto approve) with real-time output
     print("Running terraform apply...")
-    ret_code, out, err = tf.apply()
-    print(out)  # Show terraform apply output
-    print(err)  # Show terraform apply errors
-
-    # Accept return codes 0 (no changes) or 2 (changes planned)
+    ret_code, out, err = tf.apply(capture_output=False)
+    # Output is shown in real time, but still check return code
     if ret_code not in [0, 2]:
-        raise RuntimeError(f"Terraform apply failed:\n{err}")
+        raise RuntimeError(f"Terraform apply failed. See above for details.")
 
     print("Done! Resources should be deployed.")
     
@@ -86,6 +86,7 @@ try:
 
     # Get Terraform outputs
     outputs = tf.output(json=True)[1]
+    print("Terraform outputs:", outputs)  # <-- Add this line for debugging
     instance_id = outputs['instance_id']['value']
     alb_dns_name = outputs['alb_dns_name']['value']
 

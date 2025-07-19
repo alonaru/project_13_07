@@ -1,78 +1,164 @@
-Terraform AWS EC2 and Load Balancer Deployment
-This project uses Python and Terraform to deploy an EC2 instance and an Application Load Balancer (ALB) on AWS. It also verifies the deployment using boto3.
+# 🚀 AWS EC2 + Application Load Balancer Automation with Terraform & Python
 
-Prerequisites
-* AWS CLI configured with your credential
-* Python 3 installed
-* Terraform installed
-* Required Python packages: jinja2, python-terraform, boto3
+This project automates the creation and deployment of an EC2 instance and an Application Load Balancer (ALB) on AWS using **Terraform**, **Python**, and **Jinja2 templates**. It also includes resource validation and outputs key details to a JSON file.
 
-You can install Python packages using:
-pip install jinja2 python-terraform boto3
-How to Use
-Run the Python script to create the Terraform configuration and deploy 
+---
 
-resources:
-python3 py_create_ec2.py
-Follow the prompts:
+## 📁 Project Structure
 
-Choose AMI: ubuntu or amazon_linux
+- `main.tf.j2` — Jinja2 template for your Terraform configuration  
+- `main.tf` — file created after running the python script Rendered Terraform file  
+- `aws_validation.json` — JSON file with instance ID, state, public IP, and ALB DNS  
+- `deploy.py` — Python script to generate `main.tf`, run Terraform commands, and validate resources  
+- `requirements.txt` — List of Python dependencies needed to run the script
 
-Choose instance type: t3.small or t3.medium
+---
 
-Enter the Load Balancer name
+## 🧰 Prerequisites
 
-The script will:
+Before you start, make sure you have the following installed:
 
-Generate a Terraform file
+- [Python 3.x](https://www.python.org/downloads/)
+- [Terraform CLI](https://developer.hashicorp.com/terraform/downloads)
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) with credentials configured
+- Install Python packages:
+  ```bash
+  pip install -r requirements.txt
+  ```
 
-Initialize Terraform
+Example `requirements.txt`:
+```
+python-terraform
+boto3
+jinja2
+```
 
-Plan and apply the deployment
+---
 
-Verify the deployed resources using AWS SDK (boto3)
+## 🧠 What This Project Does
 
-Save verification results to aws_validation.json
+1. **Prompts user for input:**
+   - Choose AMI type (`ubuntu` or `amazon_linux`)
+   - Select instance type (`t3.small` or `t3.medium`)
+   - Enter load balancer name
 
-Terraform Template
-The Terraform template uses variables such as:
+2. **Generates Terraform file** based on a Jinja2 template
 
-region: AWS region (fixed to us-east-2)
+3. **Deploys resources to AWS**:
+   - EC2 instance in a specific subnet and availability zone
+   - ALB with listener and target group
+   - Security group allowing HTTP traffic
+   - Attaches EC2 instance to the target group
 
-availability_zone: fixed to us-east-2a
+4. **Validates AWS deployment using `boto3`**:
+   - Checks EC2 instance status and IP
+   - Verifies that the ALB is live
+   - Saves output data to `aws_validation.json`
 
-ami: AMI ID based on user choice
+---
 
-instance_type: EC2 instance size
+## 🧾 AWS Environment Configuration: Bash vs PowerShell
 
-load_balancer_name: user provided
+Before running the script, users must configure AWS credentials and region using environment variables. This ensures Terraform and boto3 can authenticate properly.
 
-Verification
-After deployment, the script verifies:
+### 💻 Bash (Linux/macOS/WSL)
 
-The EC2 instance is running
+```bash
+export AWS_ACCESS_KEY_ID="your-access-key-id"
+export AWS_SECRET_ACCESS_KEY="your-secret-access-key"
+export AWS_DEFAULT_REGION="us-east-2"
+```
 
-Retrieves the instance's public IP
+You can verify settings with:
+```bash
+echo $AWS_ACCESS_KEY_ID
+```
 
-Checks that the ALB exists and fetches its DNS name
+To persist across sessions, add the exports to `.bashrc` or `.zshrc`.
 
-Verification data is saved in aws_validation.json.
+---
 
-Screenshot
-Add your screenshot here:
+### 🪟 PowerShell (Windows)
 
+```powershell
+$Env:AWS_ACCESS_KEY_ID = "your-access-key-id"
+$Env:AWS_SECRET_ACCESS_KEY = "your-secret-access-key"
+$Env:AWS_DEFAULT_REGION = "us-east-2"
+```
 
-Cleanup
-To destroy the created AWS resources, run:
+To verify:
+```powershell
+echo $Env:AWS_ACCESS_KEY_ID
+```
 
-bash
-Copy
-Edit
+To make permanent, add these to your PowerShell profile or system environment variables.
+
+---
+
+## 🔐 Required AWS Permissions
+
+Before running the Terraform template, make sure your IAM user has the necessary permissions to provision and manage resources in AWS. At a minimum, the user should be allowed to:
+
+- Launch, describe, and terminate EC2 instances
+- Create and manage security groups
+- Attach tags to AWS resources
+- Create and manage Application Load Balancers (ALB), listeners, and target groups
+- View VPC, subnet, and availability zone information
+- Create service-linked roles for Elastic Load Balancing
+- Read identity information (using STS and IAM read-only actions)
+- (Optional) Access CloudWatch metrics for deployment validation
+
+> ⚠️ Missing any of these permissions may result in Terraform apply errors or validation failures in your automation script.
+
+---
+
+## 🚨 Usage Instructions
+
+1. Clone the project to your local machine.
+
+2. **Before starting**, confirm that your AWS credentials are configured using the instructions above.
+
+3. Run the script from the `project_13_07` directory:
+   ```bash
+   python3 py_create_ec2.py
+   ```
+
+4. Follow the prompts to:
+   - Choose an AMI
+   - Pick an instance type
+   - Provide a name for the load balancer
+
+5. After successful deployment:
+   - Terraform file `main.tf` will be created
+   - AWS resources will be provisioned
+   - Outputs saved in `aws_validation.json`
+
+---
+
+## 📦 Outputs
+
+- EC2 Instance ID
+- ALB DNS name
+- Instance state and public IP  
+_All saved to `aws_validation.json`_
+
+---
+
+## 🧹 Cleanup
+
+To delete all resources:
+```bash
 terraform destroy
-Troubleshooting
-Make sure your AWS credentials are set correctly.
+```
 
-Check that the required subnets and VPC IDs in the Terraform template match your AWS environment.
+---
 
-If Terraform commands fail, review the error messages printed by the script.
+## 📌 Notes
 
+- This project works well with AWS Free Tier accounts—be mindful of usage limits
+- Make sure AMI IDs match your selected region
+- Double-check quotas and security group rules before deploying in production
+
+---
+
+Happy automating! 🎯
