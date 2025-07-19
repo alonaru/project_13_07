@@ -121,6 +121,18 @@ try:
     print(validation_data)
     # --- AWS Validation ends here ---
 
+    # --- Termination (Destroy) Option ---
+    destroy_choice = input("\nDo you want to destroy all created AWS resources? (yes/no): ").strip().lower()
+    if destroy_choice in ["yes"]:
+        print("Running terraform destroy...")
+        ret_code, out, err = tf.destroy(auto_approve=True, capture_output=False)
+        if ret_code == 0:
+            print("All resources destroyed successfully.")
+        else:
+            print("Terraform destroy failed. See above for details.")
+    else:
+        print("Resources left running. You can destroy them later with 'terraform destroy'.")
+
 
 except ValueError as ve:
     print("Input error:", ve)
