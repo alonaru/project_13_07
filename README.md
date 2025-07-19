@@ -118,26 +118,31 @@ Before running the Terraform template, make sure your IAM user has the necessary
 
 ---
 
-## 🚨 Usage Instructions
+## 🚨 User guide Instructions
 
 1. Clone the project to your local machine.
 
 2. **Before starting**, confirm that your AWS credentials are configured using the instructions above.
 
-3. Run the script from the `project_13_07` directory:
-   ```bash
+3. Run pip install -r requirements.txt
+
+4. Run the script from the `project_13_07` directory:
+   ```bash/ps
    python3 py_create_ec2.py
    ```
 
-4. Follow the prompts to:
-   - Choose an AMI
-   - Pick an instance type
+5. Follow the prompts to:
+   - Enter the region you entered for the credentials
+   - Choose an AMI (the default is Ubuntu)
+   - Pick an instance type (the default is t3.small)
    - Provide a name for the load balancer
 
-5. After successful deployment:
+6. After successful deployment:
    - Terraform file `main.tf` will be created
    - AWS resources will be provisioned
    - Outputs saved in `aws_validation.json`
+  
+7. Choose if you want to destroy the resources using terraform Destroy
 
 ---
 
@@ -151,8 +156,7 @@ _All saved to `aws_validation.json`_
 ---
 
 ## 🧹 Cleanup
-
-To delete all resources:
+- you can choose to delete the resources at the end of the script right after succesfully create them or choose To delete all resources manually after running the script:
 ```bash
 terraform destroy
 ```
