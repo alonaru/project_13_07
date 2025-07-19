@@ -3,6 +3,8 @@ from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from python_terraform import Terraform
 import boto3
 import json
+import os
+import subprocess
 
 try:
     # Ask user for region and AZs
@@ -74,10 +76,18 @@ try:
 
     # Run terraform apply (auto approve) with real-time output
     print("Running terraform apply...")
-    ret_code, out, err = tf.apply(capture_output=False)
-    # Output is shown in real time, but still check return code
-    if ret_code not in [0, 2]:
-        raise RuntimeError(f"Terraform apply failed. See above for details.")
+    try:
+        result = subprocess.run(
+            ["terraform", "apply", "-auto-approve"],
+            cwd=os.getcwd(),
+            check=False
+        )
+        if result.returncode == 0:
+            print("Terraform apply completed successfully!")
+        else:
+            raise RuntimeError(f"Terraform apply failed with return code: {result.returncode}")
+    except Exception as e:
+        raise RuntimeError(f"Error running terraform apply: {e}")
 
     print("Done! Resources should be deployed.")
     
@@ -125,14 +135,20 @@ try:
     destroy_choice = input("\nDo you want to destroy all created AWS resources? (yes/no): ").strip().lower()
     if destroy_choice in ["yes"]:
         print("Running terraform destroy...")
-        ret_code, out, err = tf.destroy(auto_approve=True, capture_output=False)
-        if ret_code == 0:
-            print("All resources destroyed successfully.")
-        else:
-            print("Terraform destroy failed. See above for details.")
+        try:
+            result = subprocess.run(
+                ["terraform", "destroy", "-auto-approve"],
+                cwd=os.getcwd(),
+                check=False
+            )
+            if result.returncode == 0:
+                print("All resources destroyed successfully.")
+            else:
+                print(f"Terraform destroy failed with return code: {result.returncode}")
+        except Exception as e:
+            print(f"Error running terraform destroy: {e}")
     else:
         print("Resources left running. You can destroy them later with 'terraform destroy'.")
-
 
 except ValueError as ve:
     print("Input error:", ve)
