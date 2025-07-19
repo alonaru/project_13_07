@@ -3,14 +3,15 @@ provider "aws" {
 }
 
 resource "aws_instance" "web_server" {
- ami = "{{ ami }}"
- instance_type = "{{ instance_type }}"
- subnet_id = aws_subnet.subnet1.id
- availability_zone = "{{ availability_zone }}"
+  ami                         = "{{ ami }}"
+  instance_type               = "{{ instance_type }}"
+  subnet_id                   = aws_subnet.subnet1.id
+  availability_zone           = "{{ az1 }}"
+  associate_public_ip_address = true
 
- tags = {
-   Name = "alonaru-web_server"
- }
+  tags = {
+    Name = "alonaru-web_server"
+  }
 }
 
 resource "aws_lb" "application_lb" {
@@ -64,8 +65,35 @@ resource "aws_lb_target_group_attachment" "web_instance_attachment" {
  target_id        = aws_instance.web_server.id
 }
 
+
 resource "aws_vpc" "main_vpc" {
   cidr_block = "10.0.0.0/16"
+}
+
+# Internet Gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main_vpc.id
+}
+
+# Route Table
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+}
+
+# Associate subnets with route table
+resource "aws_route_table_association" "subnet1_assoc" {
+  subnet_id      = aws_subnet.subnet1.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+resource "aws_route_table_association" "subnet2_assoc" {
+  subnet_id      = aws_subnet.subnet2.id
+  route_table_id = aws_route_table.public_rt.id
 }
 
 resource "aws_subnet" "subnet1" {
